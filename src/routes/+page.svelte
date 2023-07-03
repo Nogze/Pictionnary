@@ -43,3 +43,5 @@
         <p class={`text-xl text-red-500 text-center transitions-all first-letter:uppercase ${error === "" ? "opacity-0" : "opacity-100"}`}>{error}</p>
     </div>
 </div>
+
+<button on:click={() => socket.emit({type: "getWord", sender: socket?.username || ""})}>Rand</button>

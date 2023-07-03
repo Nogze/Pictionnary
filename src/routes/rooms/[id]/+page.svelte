@@ -2,23 +2,48 @@
     import Canvas from "./Canvas.svelte";
     import {onDestroy, onMount} from "svelte";
     import {initializeSocket, websocket} from "$lib/socket.js";
+    import Chat from "./Chat.svelte";
+    import Players from "./Players.svelte";
 
+    export let data
     let socket
+    let room = {
+        drawHistory: []
+    }
 
     const unsubscribe = websocket.subscribe(val => socket = val)
 
     onMount(() => {
         initializeSocket()
+
+        socket.emit({type: "getRoom", payload: data.id}, (response) => {
+            console.log(response)
+            room = response.payload
+        })
+
+        socket.on("broadcast/joinRoom", (data) => {
+            console.log("data", data)
+            room = data.payload
+        })
+
+        socket.on("broadcast/leaveRoom", (data) => {
+            // eslint-disable-next-line no-unused-vars
+            room = data.payload
+        })
     })
 
     onDestroy(() => {
-        unsubscribe()
-
         socket.emit({type: "leave", sender: socket.username})
+        unsubscribe()
     })
 
-    export let data
 </script>
 
-<h1>Room {data?.id}</h1>
-<Canvas lineWidth={5} strokeStyle="#000"></Canvas>
+<div class="flex flex-col items-center gap-10 mt-20">
+    <h1 class="text-4xl text-center">Room {data.id}</h1>
+    <div class="flex gap-4">
+        <Players room={room}/>
+        <Canvas lineWidth={5} strokeStyle="#000" drawHistory={room.drawHistory}></Canvas>
+        <Chat room={room}></Chat>
+    </div>
+</div>

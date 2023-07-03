@@ -4,14 +4,18 @@
 
     export let strokeStyle
     export let lineWidth
+    export let drawHistory
 
     let socket
     let context
     let canvas
     let isDrawing = false
     let start = {x: null, y: null}
+    let drawnCount = 0
 
     const unsubscribe = websocket.subscribe(val => socket = val)
+
+    $: printLines(drawnCount, drawHistory.length)
 
     onMount(() => {
         initializeSocket()
@@ -19,22 +23,28 @@
         context.lineWidth = lineWidth
         context.strokeStyle = strokeStyle
 
-
-        socket.on("broadcast/draw", (data) => window.requestAnimationFrame(() => {
-            const {drawX, drawY, strokeStyle, lineWidth} = data.payload
-            start = {x: drawX, drawY}
-            context.strokeStyle = strokeStyle
-            context.lineWidth = lineWidth
-
-            context.moveTo(start.x, start.y)
-            context.lineTo(drawX, drawY)
-            context.stroke()
-        }))
+        socket.on("broadcast/draw", (data) => {
+            drawHistory = [...drawHistory, data.payload]
+        })
     })
 
     onDestroy(() => {
         unsubscribe()
     })
+
+    const printLines = (from, to) => {
+        for (let i = from; i < to; i++) {
+            const {x1, y1, x2, y2, strokeStyle, lineWidth} = drawHistory[i]
+            context.beginPath()
+            context.strokeStyle = strokeStyle
+            context.lineWidth = lineWidth
+
+            context.moveTo(x1, y1)
+            context.lineTo(x2, y2)
+            context.closePath()
+            context.stroke()
+        }
+    }
 
     const handleStartDrawing = (e) => {
         isDrawing = true
@@ -43,12 +53,6 @@
         const drawY = e.clientY - y
 
         start = {x: drawX, y: drawY}
-
-        socket.emit({
-            type: "draw",
-            payload: {drawX, drawY, strokeStyle, lineWidth},
-            sender: socket.username
-        })
     }
 
     const handleStopDrawing = () => {
@@ -63,7 +67,7 @@
 
         socket.emit({
             type: "draw",
-            payload: {drawX, drawY, strokeStyle, lineWidth},
+            payload: {x1: start.x, y1: start.y, x2: drawX, y2: drawY, strokeStyle, lineWidth},
             sender: socket.username
         })
 
@@ -79,6 +83,5 @@
         on:mousemove={handleDraw}
         width={500}
         height={500}
-        class="bg-white"
-        draggable="false"
+        class="bg-white max-w-[500px] max-h-[500px]"
 ></canvas>

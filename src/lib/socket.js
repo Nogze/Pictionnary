@@ -43,4 +43,6 @@ export const initializeSocket = () => {
 
 	websocket.set(socket);
 	socketInstance = socket;
+	socketInstance.users = {};
+	socketInstance.rooms = {};
 };
