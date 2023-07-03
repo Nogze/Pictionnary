@@ -17,7 +17,8 @@
         unsubscribe()
     })
 
-    const handleSubmit = () => {
+    const handleSubmit = (e) => {
+        e.preventDefault()
         socket.emit({type: "connect", sender: username}, (response) => {
             if (!response.status) return error = response.payload
             socket.username = response.payload.username

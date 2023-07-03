@@ -18,7 +18,6 @@
     })
 
     export let data
-    console.log(data)
 </script>
 
 <h1>Room {data?.id}</h1>

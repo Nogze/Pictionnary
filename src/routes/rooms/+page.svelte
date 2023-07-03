@@ -14,7 +14,6 @@
         initializeSocket()
 
         socket.emit({type: "getRooms", sender: socket.username}, (response) => {
-            console.log(response)
             rooms = response.payload
         })
 
@@ -35,7 +34,6 @@
 
     const handleJoin = (id) => {
         socket.emit({type: "join", payload: id, sender: socket.username}, (response) => {
-            console.log("response", response)
             if (!response.status) return
             goto(`/rooms/${response.payload.id}`)
 
@@ -44,7 +42,6 @@
 
     const handleSubmit = () => {
         socket.emit({type: "join", payload: text, sender: socket.username}, (response => {
-            console.log("response", response)
             if (!response.status) return
             goto(`/rooms/${response.payload.id}`)
         }))

@@ -10,7 +10,6 @@
     let canvas
     let isDrawing = false
     let start = {x: null, y: null}
-    let initialized = false
 
     const unsubscribe = websocket.subscribe(val => socket = val)
 
@@ -19,25 +18,18 @@
         context = canvas.getContext("2d")
         context.lineWidth = lineWidth
         context.strokeStyle = strokeStyle
-        context.beginPath()
 
 
-        socket.on("broadcast/draw", (data) => {
+        socket.on("broadcast/draw", (data) => window.requestAnimationFrame(() => {
             const {drawX, drawY, strokeStyle, lineWidth} = data.payload
-            if (!start.x || !start.y)
-                start = {x: drawX, drawY}
+            start = {x: drawX, drawY}
             context.strokeStyle = strokeStyle
             context.lineWidth = lineWidth
 
-            if (!initialized)
-                context.moveTo(start.x, start.y)
-            context.lineTo(drawX, drawY)
             context.moveTo(start.x, start.y)
+            context.lineTo(drawX, drawY)
             context.stroke()
-
-            start = {x: drawX, y: drawY}
-            initialized = true
-        })
+        }))
     })
 
     onDestroy(() => {
@@ -52,7 +44,11 @@
 
         start = {x: drawX, y: drawY}
 
-        socket.emit({type: "draw", payload: {drawX, drawY, strokeStyle, lineWidth}, sender: socket.username})
+        socket.emit({
+            type: "draw",
+            payload: {drawX, drawY, strokeStyle, lineWidth},
+            sender: socket.username
+        })
     }
 
     const handleStopDrawing = () => {
